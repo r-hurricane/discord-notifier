@@ -3,15 +3,21 @@ import {config} from './config.js';
 import {DiscordNotifier} from "./discord.js";
 import {formatters} from './formatters/index.js';
 
+// Helper method to notify all
+const allHooks = [...new Set(config.watchers.flatMap(w => w.webhooks))];
+
 // Define the connection loop
 let doShutdown = false;
+let reconnectTimeout: NodeJS.Timeout | null = null;
 let socket: FileWatcherSocket | null = null;
 const init = () => {
+
+    reconnectTimeout = null;
 
     // Try and establish a connection to the IPC socket
     socket = connect(config.ipcPath, 'Discord Notifier', () => {
         console.log('Connected and awaiting messages\n' + ''.padStart(31, '.'));
-        config.watchers.forEach(w => DiscordNotifier.Send(w.webhooks, '-# NOAA File Watcher Connected'));
+        DiscordNotifier.Send(allHooks, '-# NOAA File Watcher Connected');
 
     }).on('error', (error: Error) => {
         console.error('Error connecting to IPC path: ' + config.ipcPath);
@@ -24,10 +30,10 @@ const init = () => {
             return;
         }
 
-        config.watchers.forEach(w => DiscordNotifier.Send(w.webhooks, '-# NOAA File Watcher connection lost'));
+        DiscordNotifier.Send(allHooks, '-# NOAA File Watcher connection lost');
         console.log('Connection was closed. Attempting to reestablish connection in 30 seconds.');
         console.log(''.padStart(30, '='));
-        setTimeout(init, 30000);
+        reconnectTimeout = setTimeout(init, 30000);
 
     }).on('messageError', (error: unknown) => {
         console.error('Message receive failed:');
@@ -39,7 +45,7 @@ const init = () => {
         switch(message?.cmd) {
             case "shutdown":
                 console.log('Shutdown received.');
-                config.watchers.forEach(w => DiscordNotifier.Send(w.webhooks, '-# NOAA File Watcher Shutdown'));
+                DiscordNotifier.Send(allHooks, '-# NOAA File Watcher Shutdown');
                 return;
 
             case "new":
@@ -70,11 +76,13 @@ const init = () => {
 
 init();
 
-const shutdown = (sig: string) => {
+const shutdown = async (sig: string) => {
     console.log('System Interrupt received: ' + sig);
-    config.watchers.forEach(w => DiscordNotifier.Send(w.webhooks, '-# Notifier Shutdown'));
     doShutdown = true;
+    await DiscordNotifier.Send(allHooks, '-# Notifier Shutdown');
     socket?.destroy();
+    if (reconnectTimeout)
+        clearTimeout(reconnectTimeout);
 };
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));

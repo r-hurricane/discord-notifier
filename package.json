@@ -25,6 +25,7 @@
   "dependencies": {
     "@r-hurricane/atcf-parser": "^1.0.0-alpha.1",
     "@r-hurricane/noaa-file-watcher-client": "^1.0.0-alpha.1",
+    "@r-hurricane/two-parser": "^1.0.0-alpha.1",
     "@r-hurricane/wmo-parser": "^1.0.0-alpha.1",
     "config": "^3.3.12"
   }
