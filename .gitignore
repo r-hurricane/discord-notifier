@@ -1,0 +1,7 @@
+﻿config/*
+!config/example.json5
+dist/
+logs/
+data/
+node_modules/
+*.sh

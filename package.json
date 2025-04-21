@@ -1,0 +1,31 @@
+﻿{
+  "name": "@r-hurricane/discord-notifier",
+  "version": "1.0.0-alpha.1",
+  "type": "module",
+  "private": true,
+  "description": "An application that listens for IPC notifications from the Noaa File Watcher and sends formatted messages to discord.",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "npx tsc -p tsconfig.json",
+    "test": " npm run build && node ./dist/index.js"
+  },
+  "contributors": [
+    {
+      "name": "Tyler Hadidon (Beach-Brews)",
+      "url": "https://thadidon.com"
+    }
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/config": "^3.3.5",
+    "@types/node": "^22.10.1",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@r-hurricane/atcf-parser": "^1.0.0-alpha.1",
+    "@r-hurricane/noaa-file-watcher-client": "^1.0.0-alpha.1",
+    "@r-hurricane/wmo-parser": "^1.0.0-alpha.1",
+    "config": "^3.3.12"
+  }
+}
