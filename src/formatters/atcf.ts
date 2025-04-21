@@ -37,23 +37,42 @@ Wind Radi: 34kt
 30NM ------ 30NM
 Date Time: 06-26 @ 00 UTC
          */
-
-        // Bug: Prints "ATCF Update for AL INVEST | Disturbance INVEST" rather than "ATCF Update for INVEST AL95 | Invest AL95"
-
         const windCat = this.windCategory(c.maxSusWind);
+        const name = `${c.name === 'INVEST' && atcf.invest
+            ? `Invest ${c.basin}${atcf.invest.to.id}`
+            : `${c.level} ${c.name}`
+        }${p(' - ', windCat != 'TD' ? windCat : null)}`;
+
+        /*
+        const table: string[][] = [
+            ['Pos', `${c.lat?.toFixed(1)} ${c.lon?.toFixed(1)}`],
+            ['Wind', `${c.maxSusWind}kt${p(' / ', c.windGust, 'kt')}${p(' @ ', c.maxWindRad, 'nmi')}`],
+            ['Psur', p('', c.minSeaLevelPsur, 'mb' + p(' - ', c.outerPsur, 'mb') + p(' @ ', c.outerRad, 'nmi'))],
+            ['Depth', c.depth?.toString() ?? ''],
+            ['Wind Radi', p('', c.windRad?.rad, 'kt' + p(' @ ', c.windRad?.code === 'AAA' ? c.windRad.ne : null, 'nmi')) +
+                !c.windRad || c.windRad?.code !== 'NEQ' ? '' :
+                `${c.windRad.nw?.toString().padStart(3, ' ')}kt ------ ${c.windRad.ne?.toString().padStart(3, ' ')}kt
+${c.eyeDia?.toString().padStart(2, ' ')}nmi
+${c.windRad.sw?.toString().padStart(3, ' ')}kt ------ ${c.windRad.se?.toString().padStart(3, ' ')}kt`
+            ],
+            ['Date', this.getDate(c.date)]
+        ];
+        return heading + '\n```\n' + name + '\n' + this.toTable(table) + '\n```';
+        */
         return `${heading}
-${c.level} ${c.name}${p(' - ', windCat != 'TD' ? windCat : null)}
-Pos: ${c.lat?.toFixed(1)} ${c.lon?.toFixed(1)}
-Wind: ${c.maxSusWind}kt${p(' / ', c.windGust, 'kt')}${p(' @ ', c.maxWindRad, 'nmi')}
-${p('Psur: ', c.minSeaLevelPsur, 'mb' + p(' - ', c.outerPsur, 'mb') + p(' @ ', c.outerRad, 'nmi'))}
-${p('Depth: ', c.depth)}
-${p('Wind Radi: ', c.windRad?.rad, 'kt' + p(' @ ', c.windRad?.code === 'AAA' ? c.windRad.ne : null, 'nmi'))}
-${c.windRad?.code !== 'NEQ' ? '' : 
+-----
+__**${name}**__
+**Pos:** ${c.lat?.toFixed(1)} ${c.lon?.toFixed(1)}
+**Wind:** ${c.maxSusWind}kt${p(' / ', c.windGust, 'kt')}${p(' @ ', c.maxWindRad, 'nmi')}
+${p('**Psur:** ', c.minSeaLevelPsur, 'mb' + p(' - ', c.outerPsur, 'mb') + p(' @ ', c.outerRad, 'nmi'))}
+${p('**Depth:** ', c.depth)}
+${p('**Wind Radi:** ', c.windRad?.rad, 'kt' + p(' @ ', c.windRad?.code === 'AAA' ? c.windRad.ne : null, 'nmi'))}
+${c.windRad?.code !== 'NEQ' ? '' :
 `${c.windRad.nw?.toString().padStart(3, ' ')}kt ------ ${c.windRad.ne?.toString().padStart(3, ' ')}kt
        ${c.eyeDia?.toString().padStart(2, ' ')}nmi
 ${c.windRad.sw?.toString().padStart(3, ' ')}kt ------ ${c.windRad.se?.toString().padStart(3, ' ')}kt
 `}
-Date Time: ${this.getDate(c.date)}
+**Time**: ${this.getDate(c.date)}
 `.replaceAll(/\n\n+/g, '\n');
     }
 
@@ -84,10 +103,12 @@ Date Time: ${this.getDate(c.date)}
             const currentCat = this.windCategory(current.maxSusWind);
             if (lastCat != currentCat)
                 return `# ${current.name} now a ${currentCat}`;
+            if (last.level != current.level)
+                return `# ${current.name} has become ${current.level}`;
         }
 
         // Default heading
-        return `*ATCF Update for ${current.basin} ${current.name}*`;
+        return `**ATCF Update for ${current.basin} ${current.name === 'INVEST' && atcf.invest ? 'Invest ' + atcf.invest.to.id : current.name}**`;
     }
 
     public windCategory(susWind: number | null): string | null {
@@ -106,5 +127,50 @@ Date Time: ${this.getDate(c.date)}
         const d = new Date(s);
         const p = (v: number): string => v.toString().padStart(2, '0');
         return `${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())} @ ${p(d.getUTCHours())} UTC`;
+    }
+
+    public toTable(data: string[][]): string | null {
+        if (!data || !data[0]) return null;
+
+        // First, determine the size of each column
+        const colSize: number[] = [];
+        for (let l of data) {
+            for (let i=0; i<l.length; ++i) {
+                colSize[i] = Math.max(colSize[i] ?? 0, (l[i]?.length ?? 0) + 2);
+            }
+        }
+
+        // Now print each row
+        const mid = this.getTableBorder(colSize, 0);
+        const end = this.getTableBorder(colSize, -1);
+        let table = this.getTableBorder(colSize, 1);
+        for (let i=0; i<data.length; ++i) {
+            if ((data[i]?.at(1)?.trim().length ?? 0) <= 0) continue;
+            table += this.getTableLine(colSize, data[i] ?? []) + (i < data.length-1 ? mid : end);
+        }
+        return table;
+    }
+
+    public getTableLine(colSize: number[], data: string[]): string {
+        const sep = '│';
+        let cols = sep;
+        for (let i=0; i<colSize.length; ++i) {
+            cols += ' ' + (data[i] ?? '').padEnd((colSize[i] ?? 0) - 2, ' ') + ' ' + sep;
+        }
+        return cols + '\n';
+    }
+
+    public getTableBorder(colSize: number[], type: number): string {
+        const start =  type >= 1 ? '┌' : (type <= -1 ? '└' : '├');
+        const center = type >= 1 ? '┬' : (type <= -1 ? '┴' : '┼');
+        const end =    type >= 1 ? '┐' : (type <= -1 ? '┘' : '┤');
+        const sep = '─';
+
+        let cols = '';
+        for (let i=0; i<colSize.length; ++i) {
+            cols += ''.padStart(colSize[i] ?? 0, sep) + (i < colSize.length-1 ? center : end);
+        }
+
+        return start + cols + '\n';
     }
 }
