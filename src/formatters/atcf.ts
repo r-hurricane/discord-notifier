@@ -60,19 +60,18 @@ ${c.windRad.sw?.toString().padStart(3, ' ')}kt ------ ${c.windRad.se?.toString()
         return heading + '\n```\n' + name + '\n' + this.toTable(table) + '\n```';
         */
         return `${heading}
------
 __**${name}**__
 **Pos:** ${c.lat?.toFixed(1)} ${c.lon?.toFixed(1)}
 **Wind:** ${c.maxSusWind}kt${p(' / ', c.windGust, 'kt')}${p(' @ ', c.maxWindRad, 'nmi')}
 ${p('**Psur:** ', c.minSeaLevelPsur, 'mb' + p(' - ', c.outerPsur, 'mb') + p(' @ ', c.outerRad, 'nmi'))}
 ${p('**Depth:** ', c.depth)}
-${p('**Wind Radi:** ', c.windRad?.rad, 'kt' + p(' @ ', c.windRad?.code === 'AAA' ? c.windRad.ne : null, 'nmi'))}
+${p('**Wind Radii:** ', c.windRad?.rad, 'kt' + p(' @ ', c.windRad?.code === 'AAA' ? c.windRad.ne : null, 'nmi'))}
 ${c.windRad?.code !== 'NEQ' ? '' :
 `${c.windRad.nw?.toString().padStart(3, ' ')}kt ------ ${c.windRad.ne?.toString().padStart(3, ' ')}kt
        ${c.eyeDia?.toString().padStart(2, ' ')}nmi
 ${c.windRad.sw?.toString().padStart(3, ' ')}kt ------ ${c.windRad.se?.toString().padStart(3, ' ')}kt
 `}
-**Time**: ${this.getDate(c.date)}
+-# Issued for ${this.getDate(c.date)}
 `.replaceAll(/\n\n+/g, '\n');
     }
 
@@ -108,7 +107,7 @@ ${c.windRad.sw?.toString().padStart(3, ' ')}kt ------ ${c.windRad.se?.toString()
         }
 
         // Default heading
-        return `**ATCF Update for ${current.basin} ${current.name === 'INVEST' && atcf.invest ? 'Invest ' + atcf.invest.to.id : current.name}**`;
+        return `## ATCF Update for ${current.basin} ${current.name === 'INVEST' && atcf.invest ? 'Invest ' + atcf.invest.to.id : current.name}`;
     }
 
     public windCategory(susWind: number | null): string | null {
@@ -126,7 +125,7 @@ ${c.windRad.sw?.toString().padStart(3, ' ')}kt ------ ${c.windRad.se?.toString()
         if (!s) return '';
         const d = new Date(s);
         const p = (v: number): string => v.toString().padStart(2, '0');
-        return `${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())} @ ${p(d.getUTCHours())} UTC`;
+        return `${d.getUTCFullYear()}-${p(d.getUTCMonth()+1)}-${p(d.getUTCDate())} ${p(d.getUTCHours())}z`;
     }
 
     public toTable(data: string[][]): string | null {

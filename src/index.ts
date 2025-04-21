@@ -62,7 +62,7 @@ const init = () => {
 
                        let msg = formatters[w.formatter]?.format(message.data);
                        if (msg)
-                            DiscordNotifier.Send(w.webhooks, msg);
+                            DiscordNotifier.Send(w.webhooks, ''.padStart(20, '-') + '\n' + msg);
 
                         break;
                     }
