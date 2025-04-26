@@ -1,0 +1,18 @@
+﻿[Unit]
+Description=Discord Notifier
+Requires=noaa-file-watcher
+After=noaa-file-watcher
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=10
+TimeoutSec=10
+User=rhurricane
+ExecStart=/usr/local/bin/node /opt/rhurricane/notifiers/discord-notifier/dist/index.js
+WorkingDirectory=/opt/rhurricane/notifiers/discord-notifier
+SyslogIdentifier=discord-notifier
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
