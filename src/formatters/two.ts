@@ -10,8 +10,10 @@ export class TwoFormatter implements IFormatter {
         if (!two) return null;
 
         // Print quick summary of areas in each basin
-        let ret = '## Latest Tropical Weather Outlook\n\n';
+        let ret = '';
         let date: string | undefined = undefined;
+        let counts: string[] = [];
+        let stormTotal = 0;
         for (let b of Object.keys(two.basins)) {
             ret += '__**' + b[0]?.toUpperCase() + b.substring(1) + '**__\n';
             const basin = two.basins[b];
@@ -21,6 +23,9 @@ export class TwoFormatter implements IFormatter {
                 continue;
             }
 
+            counts.push(`${b.toLowerCase() === 'atlantic' ? 'AL' : 'PA'} (${basin.areas.length})`);
+            stormTotal += basin.areas.length;
+
             for (let [i, f] of basin.areas.entries()) {
                 const bold = (f.sevenDay?.chance ?? 0) > 70 ? '**' : '';
                 ret += `${i+1}: ${bold}${f.twoDay?.chance.toString().padStart(2, '0') ?? '??'}% / ${f.sevenDay?.chance.toString().padStart(2, '0') ?? '??'}%${bold} - ${f.id ? `(${f.id}) ` : ''}${f.title}\n`;
@@ -28,7 +33,8 @@ export class TwoFormatter implements IFormatter {
             ret += '\n';
         }
 
-        return ret + this.getDate(date ?? data.file.lastModified);
+        let head = `### TWO Update: ${stormTotal == 0 ? 'No Activity' : counts.join(' - ')}\n\n`;
+        return head + ret + this.getDate(date ?? data.file.lastModified);
     }
 
     public getDate(s: string | null): string {
