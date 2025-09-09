@@ -67,9 +67,9 @@ ${p('**Psur:** ', c.minSeaLevelPsur, 'mb' + p(' - ', c.outerPsur, 'mb') + p(' @ 
 ${p('**Depth:** ', c.depth)}
 ${p('**Wind Radii:** ', c.windRad?.rad, 'kt' + p(' @ ', c.windRad?.code === 'AAA' ? c.windRad.ne : null, 'nmi'))}
 ${c.windRad?.code !== 'NEQ' ? '' :
-`${c.windRad.nw?.toString().padStart(3, ' ')}kt ------ ${c.windRad.ne?.toString().padStart(3, ' ')}kt
+`${c.windRad.nw?.toString().padStart(3, ' ')}nmi ------ ${c.windRad.ne?.toString().padStart(3, ' ')}nmi
        ${c.eyeDia?.toString().padStart(2, ' ')}nmi
-${c.windRad.sw?.toString().padStart(3, ' ')}kt ------ ${c.windRad.se?.toString().padStart(3, ' ')}kt
+${c.windRad.sw?.toString().padStart(3, ' ')}nmi ------ ${c.windRad.se?.toString().padStart(3, ' ')}nmi
 `}
 -# Issued for ${this.getDate(c.date)}
 `.replaceAll(/\n\n+/g, '\n');
